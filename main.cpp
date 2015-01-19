@@ -14,31 +14,19 @@
 #include <iostream>
 int main()
 {
-	//GLuint texture;
-
-	//glGenTextures(1, &texture);
-
-	Display display = Display();
+	Display display = Display(800, 600, false);
+	
 	Input input = Input();
-
 	input.setWindow(display);
 
-	//GLuint x;
-	//GLuint y;
-	//GLuint z;
-
-	//glGenBuffers(1, &x);
-	//glGenBuffers(1, &y);
-	//glGenBuffers(1, &z);
-
-	//std::cout << x << std::endl <<y << std::endl << z << std::endl;
-
-	//Scene scene;
-	//scene.loadScene(display, "models/sphere.model");
+	printf("\n");
+	Scene scene;
+	scene.loadScene(display, "scenes/s1.scene");
+	printf("\n");
 	//scene.loadScene(display, "models/side.model");
 	//std::cout << std::endl;
 	//scene.loadScene(display, "models/side.model");
-	while(display.running())
+	while(display.running() && false)
 	{
 		glfwPollEvents();
 	}

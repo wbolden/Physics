@@ -1,7 +1,5 @@
 #include "Display.h"
 
-
-
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb/stb_image.h"
 
@@ -10,55 +8,40 @@
 #include <fstream>
 #include <cctype>
 
-
 bool glfwInitialized = false;
 
-void printfGLInfo()
+void safePrint(const GLubyte* input)
 {
-	const GLubyte* renderer = glGetString(GL_RENDER);
+	if(input == NULL)
+	{
+		printf("%s\n", "null");
+	}
+	else
+	{
+		printf("%s\n", input);
+	}
+}
+
+void printGLInfo()
+{
+	const GLubyte* renderer = glGetString(GL_RENDERER);
 	const GLubyte* version = glGetString(GL_VERSION);
 	const GLubyte* vendor = glGetString(GL_VENDOR);
 	const GLubyte* glslVersion = glGetString(GL_SHADING_LANGUAGE_VERSION);
-	
+
+	glErrorCheck();
+
 	std::cout << "Renderer: ";
-	if(renderer == NULL)
-	{
-		std::cout << "null" << std::endl;
-	}
-	else
-	{
-		std::cout << renderer << std::endl;
-	}
+	safePrint(renderer);
 	
 	std::cout << "Version: ";
-	if(version == NULL)
-	{
-		std::cout << "null" << std::endl;
-	}
-	else
-	{
-		std::cout << version << std::endl;
-	}
+	safePrint(version);
 	
 	std::cout << "Vendor: ";
-	if(vendor == NULL)
-	{
-		std::cout << "null" << std::endl;
-	}
-	else
-	{
-		std::cout << vendor << std::endl;
-	}
+	safePrint(vendor);
 	
 	std::cout << "GLSL Version: ";
-	if(glslVersion == NULL)
-	{
-		std::cout << "null" << std::endl;
-	}
-	else
-	{
-		std::cout << glslVersion << std::endl;
-	}
+	safePrint(glslVersion);
 }
 
 void Display::initGL(int width, int height, bool fullscreen)
@@ -111,6 +94,12 @@ GLuint Display::loadTexure(const char* texturePath)
 	int w, h, comp;
 	unsigned char* image = stbi_load(texturePath, &w, &h, &comp, STBI_rgb_alpha);
 
+	if(image == NULL)
+	{
+		printf("Failed to load image from: %s\n", texturePath);
+		return 0;
+	}
+
 	//Flip
 	int wbyte = w*4;
 	unsigned char *top = NULL;
@@ -131,8 +120,7 @@ GLuint Display::loadTexure(const char* texturePath)
 			bottom++;
 		}
 	}
-	//flip
-	
+
 	glGenTextures(1, &texture);
 
 	glBindTexture(GL_TEXTURE_2D, texture);
@@ -145,7 +133,11 @@ GLuint Display::loadTexure(const char* texturePath)
 	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 
+	printf("Texture loaded: Width: %d, Height: %d, Texture id: %d\n", w, h, texture);
+
 	free(image);
+
+	glErrorCheck();
 
 	return texture;
 }
@@ -236,75 +228,35 @@ GLuint Display::initShaders(const char* vshaderPath, const char* fshaderPath)
 
 GLuint Display::createModelVAO(std::vector<float>& vertices, std::vector<float>& texCoords, std::vector<float>& normals)
 {
-	GLuint vertVBO = 1110;
-	GLuint texVBO = -1110;
-	GLuint normVBO = 1110;
-
-	GLuint sceneVAO = 1110;
-
-	std::cout << vertices.size() << std::endl;
-	std::cout << texCoords.size() << std::endl;
-	std::cout << normals.size() << std::endl;
-
-	std::cout << vertices.data() << std::endl;
-	float* dat = vertices.data();
-
-	std::cout << dat[0] << "," << dat[1] << "," << dat[2]<<  std::endl;
-
-
-	if(glIsBuffer(vertVBO) == GL_TRUE)
-	{
-	 	std::cout << "true"<< std::endl;
-	}
-	else
-	{
-	 	std::cout << "false"<< std::endl;
-	}
-	std::cout << gluErrorString( glGetError()) << std::endl;
+	GLuint vertVBO = 0;
+	GLuint texVBO = 0;
+	GLuint normVBO = 0;
+	GLuint modelVAO = 0;
 
 	glGenBuffers(1, &vertVBO);
-std::cout << gluErrorString( glGetError()) << std::endl;
-
-	if(glIsBuffer(vertVBO) == GL_TRUE)
-	{
-	 	std::cout << "true"<< std::endl;
-	}
-	else
-	{
-	 	std::cout << "false"<< std::endl;
-	}
 	glBindBuffer(GL_ARRAY_BUFFER, vertVBO);
-
-	
-std::cout << gluErrorString( glGetError()) << std::endl;
-
 	glBufferData(GL_ARRAY_BUFFER, sizeof(GLfloat)*vertices.size(), vertices.data(), GL_STATIC_DRAW);
 
-	if(glIsBuffer(vertVBO) == GL_TRUE)
-	{
-		std::cout << "true"<< std::endl;
-	}
-	else
-	{
-	 	std::cout << "false"<< std::endl;
-	}
+	glErrorCheck();
 
 	glGenBuffers(1, &texVBO);
 	glBindBuffer(GL_ARRAY_BUFFER, texVBO);
 	glBufferData(GL_ARRAY_BUFFER, sizeof(GLfloat)*texCoords.size(), texCoords.data(), GL_STATIC_DRAW);
 
+	glErrorCheck();
+
 	glGenBuffers(1, &normVBO);
 	glBindBuffer(GL_ARRAY_BUFFER, normVBO);
 	glBufferData(GL_ARRAY_BUFFER, sizeof(GLfloat)*normals.size(), normals.data(), GL_STATIC_DRAW);
 
-	std::cout << gluErrorString( glGetError()) << std::endl;
+	glErrorCheck();
 
 	std::cout << vertVBO << std::endl;
 	std::cout << texVBO << std::endl;
 	std::cout << normVBO << std::endl;
 
-	glGenVertexArrays(1, &sceneVAO);
-	glBindVertexArray(sceneVAO);
+	glGenVertexArrays(1, &modelVAO);
+	glBindVertexArray(modelVAO);
 
 	glEnableVertexAttribArray(0);
 	glBindBuffer(GL_ARRAY_BUFFER, vertVBO);
@@ -318,22 +270,87 @@ std::cout << gluErrorString( glGetError()) << std::endl;
 	glBindBuffer(GL_ARRAY_BUFFER, normVBO);
 	glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, 0, NULL);
 
+	printf("Model loaded: Vertices: %d, Model VAO: %d\n", (int)(vertices.size()/3), modelVAO);
 
-	std::cout << gluErrorString( glGetError()) << std::endl;
+	glErrorCheck();
 
-	return sceneVAO;
+	return modelVAO;
 }
 
+GLuint Display::loadModel(const char* modelPath)
+{
+	std::ifstream file;
+	file.open(modelPath);
+
+	if(!file.is_open())
+	{
+		printf("Failed to open file from: %s\n", modelPath);
+		return 0;
+	}
+
+	std::vector<float> vertices;
+	std::vector<float> texCoords;
+	std::vector<float> normals;
+
+	float x, y, z; 	//vertices
+	float u, v;		//texture coordinates
+	float i, j, k;	//normals
+
+	while(file >> x)
+	{
+		file >> y;
+		file >> z;
+
+		file >> u;
+		file >> v;
+
+		file >> i;
+		file >> j;
+		file >> k;
+
+		vertices.push_back(x);
+		vertices.push_back(y);
+		vertices.push_back(z);
+
+		texCoords.push_back(u);
+		texCoords.push_back(v);
+
+		normals.push_back(i);
+		normals.push_back(j);
+		normals.push_back(k);
+	}
+
+	return createModelVAO(vertices, texCoords, normals);
+}
 
 Display::Display()
 {
-	Display(800, 600, false);
+	initGL(800, 600, false);
+	printGLInfo();
 }
 
 Display::Display(int width, int height, bool fullscreen)
 {
 	initGL(width, height, fullscreen);
-	printfGLInfo();
+	printGLInfo();
+}
+
+void render(Scene& scene)
+{
+	if(!scene.hasData())
+	{
+		printf("No data loaded in Scene\n");
+		return;
+	}
+
+	if(scene.useRayTracing())
+	{
+
+	}
+	else
+	{
+		
+	}
 }
 
 bool Display::running()

@@ -1,7 +1,7 @@
 PROJECTNAME :=physics
 
-CC := g++
-CFLAGS := -std=c++11 -Wall $(ARGS)
+CC := gcc
+CFLAGS := -std=c++11 -Wall $(ARGS) `pkg-config --cflags glfw3`
 
 NVCC := /usr/local/cuda/bin/nvcc
 NVCCGENCODEFLAGS := -arch=compute_50 -code=sm_50,compute_50
@@ -14,12 +14,12 @@ CUDALIBPATH := -L$(CUDAPATH)/lib64
 
 LIBPATH :=
 GLPATH := /usr/include
-LIBS := -lGLEW -lGL -lGLU -lglfw3 -lX11 -lXxf86vm -lXrandr -lXi -lcuda -lcudart
+LIBS := -lGLEW -lGLU `pkg-config --static --libs glfw3` -lcuda -lcudart
 INCLUDES := -I$(CUDAPATH)/include -I$(GLPATH)
 
 all: $(PROJECTNAME)
 
-$(PROJECTNAME): main.o Display.o Input.o Scene.o # Graphics.o Physics.o Body.o Ray.o
+$(PROJECTNAME): main.o Display.o Input.o Scene.o
 	$(NVCC) $(NVCCLINKFLAGS) -o $@ $^ $(LIBPATH) $(CUDALIBPATH) $(LIBS)
 
 %.o: %.cpp
@@ -29,5 +29,5 @@ $(PROJECTNAME): main.o Display.o Input.o Scene.o # Graphics.o Physics.o Body.o R
 	$(NVCC) $(NVCCFLAGS) -c $(INCLUDES) $<
 
 clean:
-	- rm *.o
-	- rm $(PROJECTNAME)
+	rm *.o
+	rm $(PROJECTNAME)
