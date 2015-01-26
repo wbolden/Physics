@@ -1,0 +1,30 @@
+#texture tex //path to texture
+textures/t1.png
+#end
+
+#model msphere
+models/sphere.model
+#end
+
+//name of body, number to make
+#body b1
+msphere 	//model
+tex 		//texture
+1 			//mass (kg)
+1 			//scale
+0	0	0 	//center of mass
+0	0	0 	//rot
+0	0	0 	//vel
+0	0	0 	//avel
+//inertia tensor (only constants, cmr^2 calculated later)
+0.4	0	0
+0	0.4	0
+0	0	0.4
+
+100 //number to make
+-100	100 //min x	max x
+-100	100 //min y	max y
+-100	100 //min z	max z
+#end
+
+
