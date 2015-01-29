@@ -9,44 +9,58 @@
 #include <stdlib.h> //for rand
 #include <time.h> //for time(0)
 
+#include "cuda.h"
+#include "cuda_runtime.h"
+#include "device_launch_parameters.h"
+
 Scene::Scene()
 {
-	loaded = false;
-	physics = true;
-	collision = true;
-	rayTracing = false;
+	info.loaded = false;
+	info.physics = true;
+	info.collision = true;
+	info.rayTrace = false;
+	info.shaderProgram = 0;
+	//info.projLoc =  glGetUniformLocation(shaderProgram, "proj");
+	//info.viewLoc =  glGetUniformLocation(shaderProgram, "view");
 }
 
 
-Scene::Scene(Display& display, const char* scenePath, bool physics, bool collision, bool rayTracing)
+Scene::Scene(Display& display, const char* scenePath, const char* vShader, const char* fShader, bool physics, bool collision, bool rayTracing)
 {
+	info.loaded = false;
+	info.physics = physics;
+	info.collision = collision;
+	info.rayTrace = rayTracing;
+	info.shaderProgram = display.initShaders(vShader, fShader);
+	info.projLoc =  glGetUniformLocation(info.shaderProgram, "proj");
+	info.viewLoc =  glGetUniformLocation(info.shaderProgram, "view");
 
+	printf("%d\n", info.projLoc);
+	printf("%d\n", info.viewLoc);
+
+	loadScene(display, scenePath);
 }
+
 
 bool Scene::hasData()
 {
-	return loaded;
+	return info.loaded;
 }
 
 bool Scene::usePhysics()
 {
-	return physics;
+	return info.physics;
 }
 
 bool Scene::useCollision()
 {
-	return collision;
+	return info.collision;
 }
 
 bool Scene::useRayTracing()
 {
-	return rayTracing;
+	return info.rayTrace;
 }
-
-struct body
-{
-
-};
 
 struct range
 {
@@ -110,6 +124,13 @@ int getIdentiferIndex(std::vector<std::string>& lines, std::vector<range>& ident
 	return -1;
 }
 
+void printMinMax(int* min, int* max)
+{
+	printf("x: [%d, %d]\n", min[0], max[0]);
+	printf("y: [%d, %d]\n", min[1], max[1]);		
+	printf("z: [%d, %d]\n", min[2], max[2]);
+}
+
 
 void Scene::loadScene(Display& display, const char* scenePath) //also pass Display&
 {
@@ -137,15 +158,10 @@ void Scene::loadScene(Display& display, const char* scenePath) //also pass Displ
 	std::vector<range> texRanges = getRanges(lines, "#texture", "#end");
 	std::vector<range> modelRanges = getRanges(lines, "#model", "#end");
 	std::vector<range> bodyRanges = getRanges(lines, "#body", "#end");
-//	std::vector<range> sceneRanges = getRanges(lines, "#scene", "#end");
-//printf("%d\n", bodyRanges[0].end);
-	printRangeVector(lines, texRanges);
-	printRangeVector(lines, modelRanges);
-	printRangeVector(lines, bodyRanges);
-//	printRangeVector(lines, sceneRanges);
+
 
 	//Load textures
-	std::vector<GLuint> textures;
+	//std::vector<GLuint> textures;
 	for(unsigned int i = 0; i < texRanges.size(); i++)
 	{
 		GLuint tex;
@@ -153,22 +169,25 @@ void Scene::loadScene(Display& display, const char* scenePath) //also pass Displ
 		tex = display.loadTexure(lines[stringIndex].data());
 		if(tex != 0)
 		{
-			textures.push_back(tex);
+			info.textures.push_back(tex);
 		}
 	}
 
 	//Load models
-	std::vector<GLuint> models;
+
 	for(unsigned int i = 0; i < modelRanges.size(); i++)
 	{
-		GLuint vao;
+		modelInfo minfo;
 		int stringIndex = modelRanges[i].start+1;  //(+1) - First line is #model identifier, second line is file path
-		vao = display.loadModel(lines[stringIndex].data());
-		if(vao != 0)
+		minfo = display.loadModel(lines[stringIndex].data());
+		if(minfo.vao != 0)
 		{
-			models.push_back(vao);
+			info.models.push_back(minfo.vao);
+
+			info.indices.push_back(minfo.indices);
 		}
 	}
+
 
 	std::vector<Body> bodies;
 
@@ -176,8 +195,8 @@ void Scene::loadScene(Display& display, const char* scenePath) //also pass Displ
 	{
 		int modelIndex = getIdentiferIndex(lines, modelRanges, bodyRanges[i].start+1);
 		int textureIndex = getIdentiferIndex(lines, modelRanges, bodyRanges[i].start+2);
-		int modelId = models[modelIndex];
-		int textureId = textures[textureIndex];
+		//int modelId = info.models[modelIndex];
+		//int textureId = info.textures[textureIndex];
 
 		std::stringstream ss;
 		for(unsigned int r = bodyRanges[i].start + 3; r <= bodyRanges[i].end; r++)
@@ -186,15 +205,10 @@ void Scene::loadScene(Display& display, const char* scenePath) //also pass Displ
 			ss << ' ';
 		}
 
-		std::cout << ss.str() << std::endl;
-	//	printf("%d\n", bodyRanges[i].end);
-
 		float mass;
 		float scale;
 		float3 com;
-		float3 rot;
-		float3 vel;
-		float3 avel;
+
 
 		float3 iten[3];
 
@@ -205,18 +219,6 @@ void Scene::loadScene(Display& display, const char* scenePath) //also pass Displ
 		ss >> com.y;
 		ss >> com.z;
 
-		ss >> rot.x;
-		ss >> rot.y;
-		ss >> rot.z;
-
-		ss >> vel.x;
-		ss >> vel.y;
-		ss >> vel.z;
-
-		ss >> avel.x;
-		ss >> avel.y;
-		ss >> avel.z;		
-
 		for(int r = 0; r < 3; r++)
 		{
 			ss >> iten[r].x;
@@ -224,59 +226,141 @@ void Scene::loadScene(Display& display, const char* scenePath) //also pass Displ
 			ss >> iten[r].z;	
 		}
 
-		printf("%f\n", mass);
-		printf("%f\n", scale);
-		printf("com: %f, %f, %f\n", com.x, com.y, com.z);
-		printf("rot:%f, %f, %f\n", rot.x, rot.y, rot.z);
-		printf("vel: %f, %f, %f\n", vel.x, vel.y, vel.z);
-		printf("avel: %f, %f, %f\n\n", avel.x, avel.y, avel.z);
+		printf("\nBody %d loaded:\n\n", i);
 
+		printf("Mass: %f\n", mass);
+		printf("Scale: %f\n", scale);
+		printf("Center of Mass: %f, %f, %f\n", com.x, com.y, com.z);
+
+		printf("\nInetia tensor constants:\n");
 		printf("%f, %f, %f\n", iten[0].x, iten[0].y, iten[0].z);
 		printf("%f, %f, %f\n", iten[1].x, iten[1].y, iten[1].z);
 		printf("%f, %f, %f\n", iten[2].x, iten[2].y, iten[2].z);
-		//Mat itensor
+
+		//m*scale^2 works for sphere
+		glm::mat3 inertiaTensor(glm::vec3(iten[0].x, iten[0].y, iten[0].z)*mass*scale*scale,
+								glm::vec3(iten[1].x, iten[1].y, iten[1].z)*mass*scale*scale,
+								glm::vec3(iten[2].x, iten[2].y, iten[2].z)*mass*scale*scale);
+
 
 		int numBodies;
-		int min[3];
-		int max[3];
-		int range[3];
-
-
 		ss >> numBodies;
-		for(int r = 0; r < 3; r++)
+		info.numBodies.push_back(numBodies);
+
+
+		// 0 - position
+		// 1 - orienation
+		// 2 - velocity
+		// 3 - angular velocity
+		int min[4][3];
+		int max[4][3];
+		int range[4][3];
+		for(int a = 0; a < 4; a++)
 		{
-			ss >> min[r];
-			ss >> max[r];
-			range[r] = max[r] - min[r];
+			for(int r = 0; r < 3; r++)
+			{
+				ss >> min[a][r];
+				ss >> max[a][r];
+				range[a][r] = max[a][r] - min[a][r] + 1;
+			}
 		}
 
-		printf("%d\n", numBodies);
+		printf("\nPosition distribution:\n");
+		printMinMax(min[0], max[0]);
 
-		printf("%d, %d\n", min[0], max[0]);
-		printf("%d, %d\n", min[1], max[1]);		
-		printf("%d, %d\n", min[2], max[2]);
+		printf("\nOrientation distribution:\n");
+		printMinMax(min[1], max[1]);		
+
+		printf("\nVelocity distribution:\n");
+		printMinMax(min[2], max[2]);
+
+		printf("\nAngular Velocity distribution:\n");
+		printMinMax(min[3], max[3]);
+
+		printf("\nGenerating %d bodies\n", numBodies);
 
 		srand(time(0));
 		for(int n = 0; n < numBodies; n++)
 		{
-			float3 pos;
+			glm::vec3 attributes[4];
 
-			pos.x = (float)((rand() % range[0]) + min[0]); 
-			pos.y = (float)((rand() % range[1]) + min[1]);
-			pos.z = (float)((rand() % range[2]) + min[2]);
+			for(int a = 0; a < 4; a++)
+			{
+				attributes[a].x = (float)((rand() % range[a][0]) + min[a][0]);
+				attributes[a].y = (float)((rand() % range[a][1]) + min[a][1]);
+				attributes[a].z = (float)((rand() % range[a][2]) + min[a][2]);
+			}
+			//pos rot vel avel
+			//glm::vec3 pos(attributes[0], attributes[0], attributes[0]);
+			//glm::vec3 rot(attributes[1], attributes[1], attributes[1]);
+			//glm::vec3 vel(attributes[2], attributes[2], attributes[2]);
+			//glm::vec3 avel(attributes[3], attributes[3], attributes[3]);
 
-
-			bodies.push_back(Body(modelId, textureId, mass, pos, rot, vel, avel));
-			printf("Body %d added\n", n);
-
+			bodies.push_back(Body(modelIndex, textureIndex, mass, attributes[0], attributes[1], attributes[2], attributes[3], inertiaTensor));
+			printf("\nBody %d added with:\n", n);
+			printf("\tPosition (%f, %f, %f)\n", attributes[0].x, attributes[0].y, attributes[0].z);
+			printf("\tOrientation (%f, %f, %f)\n", attributes[1].x, attributes[1].y, attributes[1].z);
+			printf("\tVelocity (%f, %f, %f)\n", attributes[2].x, attributes[2].y, attributes[2].z);
+			printf("\tAngular Velocity (%f, %f, %f)\n", attributes[3].x, attributes[3].y, attributes[3].z);
 		}
 
 	}
 
+	unsigned int bSize = sizeof(Body) * bodies.size();
+	printf("\nAllocating %d bytes of GPU memory\n", bSize);
 
-	
+	cudaMalloc((void**)&devBodies, bSize);
+
+	printf("Copying bodies\n");
+
+	cudaMemcpy(devBodies, bodies.data(), bSize, cudaMemcpyHostToDevice);
+
+	printf("Copied\n");
+
+	display.createInstanceData(info.models[0], info.numBodies[0], info.cudaResources);
+
+	//printf("%s\n", );
+
+	info.loaded = true;
 }
 
+Body* Scene::getCUDABodies()
+{
+	return devBodies;
+}
+
+glData Scene::getCUDAResourcePointers()
+{
+	glData data;
+	data.modelRT = NULL;
+	data.color = NULL;
+
+	cudaGraphicsMapResources(2, info.cudaResources, 0);
+
+	size_t colBytes = info.numBodies[0] * sizeof(float) * 4;
+	size_t matBytes = colBytes * 4;
+
+	cudaGraphicsResourceGetMappedPointer((void**)&data.modelRT, &(matBytes), info.cudaResources[0]);
+	cudaGraphicsResourceGetMappedPointer((void**)&data.color, &(colBytes), info.cudaResources[1]);
+
+	return data;
+}
+
+void Scene::unmapCUDAResources()
+{
+	cudaGraphicsUnmapResources(2, info.cudaResources, 0);
+}
+
+void Scene::unregisterCUDA()
+{
+	cudaGraphicsUnregisterResource(info.cudaResources[0]);
+	cudaGraphicsUnregisterResource(info.cudaResources[1]);
+}
+
+RenderInfo Scene::getRenderInfo()
+{
+	return info;
+}
 
 Scene::~Scene()
 {

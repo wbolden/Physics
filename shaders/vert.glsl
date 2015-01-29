@@ -5,13 +5,14 @@ layout(location = 1) in vec2 texCoord;
 layout(location = 2) in vec3 normal;
 
 //layout(location = 3) in mat4 modelRT; //Ma
-//layout(location = 7) in vec4 color;
+layout(location = 7) in vec4 color;
 
 
 
 out vec2 texCoords;
 //out vec3 normal
-//out vec4 color
+out vec4 mcolor;
+//out int inst;
 
 //uniform vec2 pos;
 //uniform mat4 proj;
@@ -26,12 +27,16 @@ uniform mat4 mtest;
 void main()
 {
 	texCoords = texCoord;
+	mcolor = color;
+
+
 					//view * model * position
 	//vec3 pos = position;
 
 	vec4 pos = mtest* vec4(position, 1.0f);
 
 	pos.x += gl_InstanceID*2;
+
 
 	gl_Position = proj * view * pos;
 

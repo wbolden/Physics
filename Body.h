@@ -1,38 +1,50 @@
 #ifndef BODY_H
 #define BODY_H
-
+#include "cuda.h"
 //#include "cuda.h"
 //#include "cuda_runtime.h"
 #include "vector_types.h" //CUDA vectors
+
+#define GLM_FORCE_CUDA
+#define GLM_FORCE_RADIANS
+#include <glm/glm.hpp>
+#include <glm/gtc/quaternion.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtc/type_ptr.hpp>
 
 struct Body
 {
 	unsigned int modelId;
 	unsigned int texId;
+
+	glm::vec3 position;
+	glm::quat orienation;
+
+	glm::vec3 force;
+	glm::vec3 torque;
+
 	float mass;
+	glm::vec3 aMomentum;
+	glm::vec3 lMomentum;
 
-	float3 position;
-	float3 force;
-	float3 torque;
-	float3 linearMomentum;
-	float3 angularMomentum;
+	glm::mat3 iTensor;
+	glm::mat3 invITensor;
 
-	//must add com, proper amom, scale
-	Body(unsigned int mid, unsigned int tid, float m, float3 pos, float3 rot, float3 v, float3 w)
+
+	Body(unsigned int mId, unsigned int tId, float m, glm::vec3 pos, glm::vec3 rot, glm::vec3 vel, glm::vec3 avel, glm::mat3 inertiaTensor)
 	{
-		modelId = mid;
-		texId = tid;
+		modelId = mId;
+		texId = tId;
+
 		mass = m;
 		position = pos;
-	//	rot;
+		//rot
 
+		lMomentum = mass * vel;
+		aMomentum = inertiaTensor * avel;
 
-		/*
-			Must be calculated from mass/ itensor
-		*/
-
-		linearMomentum = v;
-		angularMomentum = w;
+		iTensor = inertiaTensor;
+		invITensor = glm::inverse(inertiaTensor);
 	}
 };
 

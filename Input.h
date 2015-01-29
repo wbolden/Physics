@@ -7,6 +7,7 @@
 #include <GL/glu.h>
 
 #include "Display.h"
+#include "Camera.h"
 
 class InputWrapper
 {
@@ -52,16 +53,37 @@ class Input : InputWrapper
 {
 public:
 	Input();
+	Input(Camera* camera);
 
 	void setWindow(GLFWwindow* window);
 
 	void setWindow(Display& display);
+
+	void setCamera(Camera* camera);
 
 	~Input();
 
 	virtual void keyCallback(GLFWwindow* window, int key, int scancode, int action, int mods);
 	virtual void cursorPosCallback(GLFWwindow* window, double xpos, double ypos);
 	virtual void mouseButtonCallback(GLFWwindow* window, int button, int action, int mods);
+
+private:
+	Camera* camera;
+
+	float moveForeward;
+	float moveRight;
+
+	float deltaMouseX;
+	float deltaMouseY;
+
+	float oldMouseX;
+	float oldMouseY;
+
+	int lastWS;
+	int lastAD;
+
+	int lastUD;
+	int lastRL;
 };
 
 #endif
