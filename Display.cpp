@@ -319,15 +319,17 @@ void Display::createInstanceData(GLuint modelVAO, int numBodies, cudaGraphicsRes
 	glBufferData(GL_ARRAY_BUFFER, sizeof(GL_FLOAT)*4*numBodies, NULL, GL_DYNAMIC_DRAW);
 
 	glBindVertexArray(modelVAO);
-/*
+
+
 	for(int i = 3; i < 7; i++)
 	{
+		glEnableVertexAttribArray(i);
 		glBindBuffer(GL_ARRAY_BUFFER, bodyMatVBO);
 		glVertexAttribPointer(i, 4, GL_FLOAT, GL_FALSE, sizeof(float)*4*4, (const GLvoid*)((i - 3)*sizeof(float)*4));
 		//glVertexAttribPointer(i, 4*4, GL_FLOAT, GL_FALSE, 0, NULL);
 		glVertexAttribDivisor(i, 1);
 	}
-*/
+
 
 	glEnableVertexAttribArray(7);
 	glBindBuffer(GL_ARRAY_BUFFER, colorVBO);
@@ -441,6 +443,9 @@ double Display::getTimestep()
 #include <glm/gtc/type_ptr.hpp>
 #include <glm/gtc/quaternion.hpp>
 
+///////////////////////////////////
+////////////////////
+///////////
 
 float mx = 0.00001;
 float my = 0.00001;
@@ -448,6 +453,10 @@ float mz = 0;
 
 int count = 0;
 glm::quat rotq;
+
+///////////
+////////////////////
+///////////////////////////////////
 
 
 void Display::render(RenderInfo& info, Camera* camera)
@@ -484,7 +493,7 @@ void Display::render(RenderInfo& info, Camera* camera)
 		///////////////////////////////////////////////////==============================
 			glActiveTexture(GL_TEXTURE0);
 			glBindTexture(GL_TEXTURE_2D, info.textures[0]);
-
+/*
 			glm::vec3 avel(mx, my, 0.0f);
 			
 
@@ -500,9 +509,25 @@ void Display::render(RenderInfo& info, Camera* camera)
 
 			glm::mat4 mtest = glm::mat4_cast(rotq);
 
+						mtest = glm::translate(mtest, glm::vec3(1, 5, 8));
+
+printf("MAT\n");
+			for(int x= 0; x < 4; x++)
+			{
+
+				for(int y = 0; y < 4; y++)
+				{
+					printf("%f ", mtest[x][y]);
+				}
+				printf("\n");
+			}
+
+
+
 
 			int mloc = glGetUniformLocation(info.shaderProgram, "mtest");
 			glUniformMatrix4fv(mloc, 1, GL_FALSE, glm::value_ptr(mtest));
+			*/
 
 		///////////////////////////////////////////////////
 		///////////////////////////////////////////////////===================

@@ -124,11 +124,20 @@ int getIdentiferIndex(std::vector<std::string>& lines, std::vector<range>& ident
 	return -1;
 }
 
-void printMinMax(int* min, int* max)
+void printMinMax(float* min, float* max)
 {
-	printf("x: [%d, %d]\n", min[0], max[0]);
-	printf("y: [%d, %d]\n", min[1], max[1]);		
-	printf("z: [%d, %d]\n", min[2], max[2]);
+	printf("x: [%f, %f]\n", min[0], max[0]);
+	printf("y: [%f, %f]\n", min[1], max[1]);		
+	printf("z: [%f, %f]\n", min[2], max[2]);
+}
+
+
+float randRange(float min, float max)
+{
+	float range = max - min;
+
+	float scale = (float)RAND_MAX/range;
+	return rand()/scale + min;
 }
 
 
@@ -252,8 +261,8 @@ void Scene::loadScene(Display& display, const char* scenePath) //also pass Displ
 		// 1 - orienation
 		// 2 - velocity
 		// 3 - angular velocity
-		int min[4][3];
-		int max[4][3];
+		float min[4][3];
+		float max[4][3];
 		int range[4][3];
 		for(int a = 0; a < 4; a++)
 		{
@@ -286,9 +295,13 @@ void Scene::loadScene(Display& display, const char* scenePath) //also pass Displ
 
 			for(int a = 0; a < 4; a++)
 			{
-				attributes[a].x = (float)((rand() % range[a][0]) + min[a][0]);
-				attributes[a].y = (float)((rand() % range[a][1]) + min[a][1]);
-				attributes[a].z = (float)((rand() % range[a][2]) + min[a][2]);
+//				attributes[a].x = (float)((rand() % range[a][0]) + min[a][0]);
+//				attributes[a].y = (float)((rand() % range[a][1]) + min[a][1]);
+//				attributes[a].z = (float)((rand() % range[a][2]) + min[a][2]);
+
+				attributes[a].x = randRange(min[a][0], max[a][0]);
+				attributes[a].y = randRange(min[a][1], max[a][1]);
+				attributes[a].z = randRange(min[a][2], max[a][2]);
 			}
 			//pos rot vel avel
 			//glm::vec3 pos(attributes[0], attributes[0], attributes[0]);
@@ -317,12 +330,22 @@ void Scene::loadScene(Display& display, const char* scenePath) //also pass Displ
 
 	printf("Copied\n");
 
+
+	// temp workaround
+
+
+	info.numBodies[0]=bodies.size();
+	printf("%d\n", info.numBodies[0]);
+
+	//
+
 	display.createInstanceData(info.models[0], info.numBodies[0], info.cudaResources);
 
 	//printf("%s\n", );
 
 	info.loaded = true;
 }
+
 
 Body* Scene::getCUDABodies()
 {

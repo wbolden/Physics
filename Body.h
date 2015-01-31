@@ -45,6 +45,9 @@ struct Body
 
 		iTensor = inertiaTensor;
 		invITensor = glm::inverse(inertiaTensor);
+
+		force = glm::vec3(0, 0, 0);
+		torque = glm::vec3(0, 0, 0);;
 	}
 };
 

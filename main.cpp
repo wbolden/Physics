@@ -17,9 +17,9 @@
 #include <iostream>
 int main()
 {
-	Display display(800, 600, false);
+	Display display(1280, 720, false);
 	
-	Camera* camera = new Camera();
+	Camera* camera = new Camera(70.0f,  1280, 720, 10.0f, 10000.0f);
 
 	Input input(camera);
 	input.setWindow(display);
@@ -47,7 +47,7 @@ int main()
 		RenderInfo info = scene.getRenderInfo();
 		glData data = scene.getCUDAResourcePointers();
 
-		runPhysics(scene.getCUDABodies(), data.modelRT, data.color, info.numBodies[0], timestep);
+		runPhysics(scene.getCUDABodies(), data.modelRT, data.color, info.numBodies[0], timestep*1000);
 
 		scene.unmapCUDAResources();
 

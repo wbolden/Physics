@@ -40,13 +40,13 @@ Camera::Camera(float fov, float width, float height, float near, float far)
 	currentRL = 0;
 	currentBoost = 1;
 
-	pos = glm::vec3(0.0f, 0.0f, 0.0f);
-	rot = glm::vec3(0.0f, 0.0f, 0.0f);
+	pos = glm::vec3(0.0f, 0.0f, 3.0f);
+	rot = glm::vec3(0.0f, 3.14159f, 0.0f);
 	//rot = glm::vec3(720.0f*ONED, 360.0f*ONED, 360.0f*ONED);
 	proj = glm::perspective(fov, width/height, near, far);
 
-	moveSpeed = 1;
-	rotSpeed = 0.02;
+	moveSpeed = 10;
+	rotSpeed = 3.14;
 }
 
 
