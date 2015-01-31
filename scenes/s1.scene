@@ -19,11 +19,11 @@ tex 		//texture
 0	0.4	0
 0	0	0.4
 
-2000 //number to make
+1000 //number to make
 
--50	50 //min x	max x
--50	50 //min y	max y
--50	50 //min z	max z
+-150	-50 //min x	max x
+-150	-50 //min y	max y
+-150	-50 //min z	max z
 
 //Rotation [min, max]
 0 0
@@ -31,7 +31,11 @@ tex 		//texture
 0 0
 
 //Velocities [min, max]
-0 0
+0.00015 0.00015 //for moon
+//-0.05 -0.05
+//-0.05 -0.05
+//-0.05 -0.05
+//0 0
 0 0
 0 0
 
@@ -53,7 +57,7 @@ tex 		//texture
 0	0.4	0
 0	0	0.4
 
-2000 //number to make
+8000 //number to make
 
 150	250 //min x	max x
 150	250 //min y	max y

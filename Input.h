@@ -61,6 +61,8 @@ public:
 
 	void setCamera(Camera* camera);
 
+	bool paused();
+
 	~Input();
 
 	virtual void keyCallback(GLFWwindow* window, int key, int scancode, int action, int mods);
@@ -84,6 +86,8 @@ private:
 
 	int lastUD;
 	int lastRL;
+
+	bool pause;
 };
 
 #endif

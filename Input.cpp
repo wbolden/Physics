@@ -27,6 +27,11 @@ void Input::setWindow(Display& display)
 	setWindow(display.getWindow());
 }
 
+bool Input::paused()
+{
+	return pause;
+}
+
 void Input::keyCallback(GLFWwindow* window, int key, int scancode, int action, int mods)
 {
 	//printf("%d\n", key);
@@ -46,6 +51,20 @@ void Input::keyCallback(GLFWwindow* window, int key, int scancode, int action, i
 		{
 			camera->setBoost(1);
 		}
+
+		if(key == (GLFW_KEY_SPACE))
+		{
+
+			if(action == GLFW_PRESS)
+			{
+				pause = true;
+			}
+			else if (action == GLFW_RELEASE)
+			{
+				pause = false;
+			}
+		}
+
 
 		if(key == (GLFW_KEY_W))
 		{

@@ -5,8 +5,10 @@
 #define G 6.67e-11f
 #define k 7.0e-1f
 
+#define k2 1.0e2f
 
-__global__ void nBody(Body* bodies, int numBodies) //would also pass physics model
+
+__global__ void nBody(Body* bodies, int numBodies, float ks) //would also pass physics model
 {
 	int i = blockIdx.x * blockDim.x + threadIdx.x;
 	if(i < numBodies)
@@ -25,6 +27,9 @@ __global__ void nBody(Body* bodies, int numBodies) //would also pass physics mod
 
 				glm::vec3 dirvec = rin/distr;
 
+				if(distr < 2)
+				fGravity += bodies[n].mass * dirvec*0.25f;
+				else
 				fGravity += bodies[n].mass * dirvec/ (distr*distr);
 
 				
@@ -32,7 +37,7 @@ __global__ void nBody(Body* bodies, int numBodies) //would also pass physics mod
 				{
 					glm::vec3 colp = bodies[i].position + 0.5f*rin;
 
-					glm::vec3 colforce = -k* (2 - distr)*dirvec;
+					glm::vec3 colforce = -ks* (2 - distr)*dirvec;
 
 					glm::vec3 aveli = bodies[i].invITensor * bodies[i].aMomentum;
 					glm::vec3 aveln = bodies[n].invITensor * bodies[n].aMomentum;
@@ -82,7 +87,7 @@ __global__ void nBody(Body* bodies, int numBodies) //would also pass physics mod
 }
 
 //__global__ void 
-__global__ void integrate(Body* bodies, glm::mat4* models, glm::vec4* colors, int numBodies ,float timestep)
+__global__ void integrate(Body* bodies, glm::mat4* models, glm::vec4* colors, int numBodies ,float timestep, float boost)
 {
 	int i = blockIdx.x * blockDim.x + threadIdx.x;
 
@@ -134,7 +139,7 @@ __global__ void integrate(Body* bodies, glm::mat4* models, glm::vec4* colors, in
 		/*
 			Coloring
 		*/
-		colors[i] = glm::vec4(bodies[i].force* 10.5f, 1.0f) + glm::vec4(0.3f, 0.3f, 0.3f, 0.0f);
+		colors[i] = glm::vec4(bodies[i].force* 10.5f/boost, 1.0f) + glm::vec4(0.3f, 0.3f, 0.3f, 0.0f);
 	}
 }
 
@@ -152,16 +157,17 @@ __global__ void test(Body* bodies, glm::vec4* colors, int numBodies)
 
 
 
-void runPhysics(Body* bodies, glm::mat4* models, glm::vec4* colors, int numBodies, float timestep)
+void runPhysics(Body* bodies, glm::mat4* models, glm::vec4* colors, int numBodies, float timestep, float boost)
 {
 	dim3 blockSize = 512;
 	dim3 gridSize = dim3((numBodies+blockSize.x-1)/blockSize.x);
 
 //	printf("%d, %d\n", sizeof(glm::mat4), sizeof(float)*16);
 
-	nBody<<<gridSize, blockSize>>>(bodies, numBodies);
 
-	integrate<<<gridSize, blockSize>>>(bodies, models, colors, numBodies, timestep);
+	nBody<<<gridSize, blockSize>>>(bodies, numBodies, k * boost);
+
+	integrate<<<gridSize, blockSize>>>(bodies, models, colors, numBodies, timestep, boost);
 	//test<<<gridSize, blockSize>>>(bodies, colors, numBodies);
 
 

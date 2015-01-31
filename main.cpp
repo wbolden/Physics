@@ -47,7 +47,10 @@ int main()
 		RenderInfo info = scene.getRenderInfo();
 		glData data = scene.getCUDAResourcePointers();
 
-		runPhysics(scene.getCUDABodies(), data.modelRT, data.color, info.numBodies[0], timestep*1000);
+		if(!input.paused())
+		runPhysics(scene.getCUDABodies(), data.modelRT, data.color, info.numBodies[0], timestep*1000, 1);
+		else
+		runPhysics(scene.getCUDABodies(), data.modelRT, data.color, info.numBodies[0], timestep*100, 1);
 
 		scene.unmapCUDAResources();
 

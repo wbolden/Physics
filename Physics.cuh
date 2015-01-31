@@ -16,7 +16,7 @@
 #include <glm/gtc/type_ptr.hpp>
 
 
-void runPhysics(Body* bodies, glm::mat4* models, glm::vec4* colors, int numBodies, float timestep);
+void runPhysics(Body* bodies, glm::mat4* models, glm::vec4* colors, int numBodies, float timestep, float boost);
 
 
 #endif
