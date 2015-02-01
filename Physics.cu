@@ -3,7 +3,8 @@
 #include "stdio.h"
 
 #define G 6.67e-11f
-#define k 7.0e-1f
+#define k 7.0e0f  //7.0e-1f
+#define da 10.0f  //0.9f
 
 #define k2 1.0e2f
 
@@ -70,7 +71,8 @@ __global__ void nBody(Body* bodies, int numBodies, float ks) //would also pass p
 
 					glm::vec3 shearforce = k * tvel;
 
-					glm::vec3 damp = tvel * -0.9f;
+					glm::vec3 damp = tvel * -da;
+					//glm::vec3 damp = tvel * -0.7f;
 
 					bodies[i].force += (colforce + shearforce + damp);
 

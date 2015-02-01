@@ -50,12 +50,12 @@ int main()
 		if(!input.paused())
 		runPhysics(scene.getCUDABodies(), data.modelRT, data.color, info.numBodies[0], timestep*1000, 1);
 		else
-		runPhysics(scene.getCUDABodies(), data.modelRT, data.color, info.numBodies[0], timestep*100, 1);
+		runPhysics(scene.getCUDABodies(), data.modelRT, data.color, info.numBodies[0], timestep*50, 1);
 
 		scene.unmapCUDAResources();
 
 		//see if cuda can make rotations correctly then add physics
-
+		//printf("%f\n", timestep);
 		display.render(info, camera);
 		glfwPollEvents();
 		camera->update(timestep);
