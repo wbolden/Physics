@@ -3,18 +3,22 @@
 #include "stdio.h"
 
 #define G 6.67e-11f
-#define k 7.0e0f  //7.0e-1f
-#define da 10.0f  //0.9f
+#define k 70.0e-1f  //7.0e-1f
+#define da 0.5f  //0.9f
 
 #define k2 1.0e2f
 
 
-__global__ void nBody(Body* bodies, int numBodies, float ks) //would also pass physics model
+__global__ void nBody(Body* bodies, int numBodies, float ks, glm::vec4* colors) //would also pass physics model
 {
 	int i = blockIdx.x * blockDim.x + threadIdx.x;
 	if(i < numBodies)
 	{
+		//colors[i] = glm::vec4(0.3f, 0.3f, 0.3f, 1.0f);
+
+
 		bodies[i].force = glm::vec3(0,0,0);
+		bodies[i].torque = glm::vec3(0,0,0);
 		glm::vec3 fGravity(0,0,0);
 
 		for(int n = 0; n < numBodies; n++)
@@ -28,8 +32,8 @@ __global__ void nBody(Body* bodies, int numBodies, float ks) //would also pass p
 
 				glm::vec3 dirvec = rin/distr;
 
-				if(distr < 2)
-				fGravity += bodies[n].mass * dirvec*0.25f;
+				if(distr < 1)
+				fGravity += bodies[n].mass * dirvec;
 				else
 				fGravity += bodies[n].mass * dirvec/ (distr*distr);
 
@@ -40,50 +44,62 @@ __global__ void nBody(Body* bodies, int numBodies, float ks) //would also pass p
 
 					glm::vec3 colforce = -ks* (2 - distr)*dirvec;
 
-					glm::vec3 aveli = bodies[i].invITensor * bodies[i].aMomentum;
-					glm::vec3 aveln = bodies[n].invITensor * bodies[n].aMomentum;
 
 					glm::vec3 veli = bodies[i].lMomentum/bodies[i].mass;
 					glm::vec3 veln = bodies[n].lMomentum/bodies[n].mass;
 
 					glm::vec3 relPosCM = 0.5f * rin; //reltive position of collision to center of mass of i
 
+					glm::vec3 aveli = bodies[i].invITensor * bodies[i].aMomentum;
+					glm::vec3 aveln = bodies[n].invITensor * bodies[n].aMomentum;
+
 					glm::vec3 tveli(0, 0, 0);
-					/*
-					tveli.x += aveli.x*relPosCM.x;
-					tveli.y += aveli.y*relPosCM.y;
-					tveli.z += aveli.z*relPosCM.z;
-					*/
+
+					float dist = glm::length(relPosCM);
+					
+					//tveli.x += aveli.x*dist;
+					//tveli.y += aveli.y*dist;
+					//tveli.z += aveli.z*dist;
+					tveli += glm::cross(-relPosCM, aveli);
+
+
 					tveli += veli;
 					
 
 					// - for radius
 					glm::vec3 tveln(0, 0, 0);
-					/*
-					tveln.x += -aveln.x*relPosCM.x;
-					tveln.y += -aveln.y*relPosCM.y;
-					tveln.z += -aveln.z*relPosCM.z;
-					*/
+					
+					//tveln.x += aveln.x*dist;
+					//tveln.y += aveln.y*dist;
+					//tveln.z += aveln.z*dist;
+					tveln += glm::cross(relPosCM, aveln);
+
 					tveln += veln;
 					
 
-					glm::vec3 tvel= tveli - tveln;
+					glm::vec3 tvel= -(tveli - tveln);
 
 					glm::vec3 shearforce = k * tvel;
 
 					glm::vec3 damp = tvel * -da;
 					//glm::vec3 damp = tvel * -0.7f;
 
+
+
 					bodies[i].force += (colforce + shearforce + damp);
 
 
-				//	bodies[i].torque += glm::cross(relPosCM, (colforce + shearforce + damp));
+					//colors[i] += glm::vec4(glm::abs(colforce + shearforce + damp), 0.0f);
+
+					bodies[i].torque += glm::cross(relPosCM, (colforce + shearforce + damp));
 				}
 			}
 		}
 
 		fGravity = fGravity * G * bodies[i].mass;
 		bodies[i].force += fGravity;
+
+		//colors[i] = glm::vec4(bodies[i].force* 10.5f/boost, 1.0f) + glm::vec4(0.3f, 0.3f, 0.3f, 0.0f);
 		
 	}
 }
@@ -141,7 +157,9 @@ __global__ void integrate(Body* bodies, glm::mat4* models, glm::vec4* colors, in
 		/*
 			Coloring
 		*/
-		colors[i] = glm::vec4(bodies[i].force* 10.5f/boost, 1.0f) + glm::vec4(0.3f, 0.3f, 0.3f, 0.0f);
+		colors[i] = glm::vec4(glm::abs(bodies[i].force)* 10.5f/boost, 1.0f) + glm::vec4(0.3f, 0.3f, 0.3f, 0.0f);
+		//colors[i] = glm::vec4((bodies[i].force)* 10.5f/boost, 1.0f) + glm::vec4(0.3f, 0.3f, 0.3f, 0.0f);
+
 	}
 }
 
@@ -167,7 +185,7 @@ void runPhysics(Body* bodies, glm::mat4* models, glm::vec4* colors, int numBodie
 //	printf("%d, %d\n", sizeof(glm::mat4), sizeof(float)*16);
 
 
-	nBody<<<gridSize, blockSize>>>(bodies, numBodies, k * boost);
+	nBody<<<gridSize, blockSize>>>(bodies, numBodies, k * boost, colors);
 
 	integrate<<<gridSize, blockSize>>>(bodies, models, colors, numBodies, timestep, boost);
 	//test<<<gridSize, blockSize>>>(bodies, colors, numBodies);

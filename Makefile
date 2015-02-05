@@ -6,7 +6,7 @@ CFLAGS := -fdiagnostics-color=always -std=c++11 -Wall $(ARGS) `pkg-config --cfla
 NVCC := /usr/local/cuda/bin/nvcc
 NVCCGENCODEFLAGS := -arch=compute_50 -code=sm_50,compute_50
 
-NVCCFLAGS := $(NVCCGENCODEFLAGS) $(ARGS)
+NVCCFLAGS := $(NVCCGENCODEFLAGS) $(ARGS) --compiler-bindir=/usr/local/cuda/bin
 NVCCLINKFLAGS := $(NVCCGENCODEFLAGS)
 
 CUDAPATH := /usr/local/cuda
