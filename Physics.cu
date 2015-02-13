@@ -32,6 +32,9 @@ __global__ void nBody(Body* bodies, int numBodies, float ks, glm::vec4* colors) 
 
 				glm::vec3 dirvec = rin/distr;
 
+				/*
+					might change
+				*/
 				if(distr < 1)
 				fGravity += bodies[n].mass * dirvec;
 				else
@@ -40,47 +43,66 @@ __global__ void nBody(Body* bodies, int numBodies, float ks, glm::vec4* colors) 
 				
 				if(distr < 2)
 				{
-					glm::vec3 colp = bodies[i].position + 0.5f*rin;
+					//glm::vec3 colp = bodies[i].position + 0.5f*rin;
 
-					glm::vec3 colforce = -ks* (2 - distr)*dirvec;
+					
 
-
+					/*
+						Calculate the velocities of bodies i and n
+					*/
 					glm::vec3 veli = bodies[i].lMomentum/bodies[i].mass;
 					glm::vec3 veln = bodies[n].lMomentum/bodies[n].mass;
 
-					glm::vec3 relPosCM = 0.5f * rin; //reltive position of collision to center of mass of i
-
+					/*
+						Calculate the angular velocities of bodies i and n
+					*/
 					glm::vec3 aveli = bodies[i].invITensor * bodies[i].aMomentum;
 					glm::vec3 aveln = bodies[n].invITensor * bodies[n].aMomentum;
 
-					glm::vec3 tveli(0, 0, 0);
+					glm::vec3 relPosCM = 0.5f * rin; //The point of collision relative to body i
 
-					float dist = glm::length(relPosCM);
+
+					/*
+						Calculate the tagential velocites of bodies i and n at the point of collision
+					*/
+					//glm::vec3 tveli(0, 0, 0);
+					//tveli += glm::cross(-relPosCM, aveli);
+					//tveli += veli;
 					
-					//tveli.x += aveli.x*dist;
-					//tveli.y += aveli.y*dist;
-					//tveli.z += aveli.z*dist;
-					tveli += glm::cross(-relPosCM, aveli);
+					//glm::vec3 tveln(0, 0, 0);
+					//tveln += glm::cross(relPosCM, aveln);
+					//tveln += veln;
+					
+					//glm::vec3 tvel= (veli - veln) + -(tveli - tveln);
 
 
+
+
+						//should work
+
+					//glm::vec3 tvel = veln - veli + glm::cross(relPosCM, aveln + aveli);
+
+
+					glm::vec3 tveli(0, 0, 0);
+					tveli += glm::cross(-dirvec, aveli);
 					tveli += veli;
 					
-
-					// - for radius
 					glm::vec3 tveln(0, 0, 0);
-					
-					//tveln.x += aveln.x*dist;
-					//tveln.y += aveln.y*dist;
-					//tveln.z += aveln.z*dist;
-					tveln += glm::cross(relPosCM, aveln);
-
+					tveln += glm::cross(dirvec, aveln);
 					tveln += veln;
 					
-
 					glm::vec3 tvel= -(tveli - tveln);
 
-					glm::vec3 shearforce = k * tvel;
 
+
+
+
+									//use dirvec * radius or just poscm
+
+
+
+					glm::vec3 colforce = -ks* (2 - distr)*dirvec;
+					glm::vec3 shearforce = k * tvel;
 					glm::vec3 damp = tvel * -da;
 					//glm::vec3 damp = tvel * -0.7f;
 
@@ -91,7 +113,7 @@ __global__ void nBody(Body* bodies, int numBodies, float ks, glm::vec4* colors) 
 
 					//colors[i] += glm::vec4(glm::abs(colforce + shearforce + damp), 0.0f);
 
-					bodies[i].torque += glm::cross(relPosCM, (colforce + shearforce + damp));
+					bodies[i].torque += glm::cross(dirvec, (colforce + shearforce + damp));
 				}
 			}
 		}
@@ -157,7 +179,7 @@ __global__ void integrate(Body* bodies, glm::mat4* models, glm::vec4* colors, in
 		/*
 			Coloring
 		*/
-		colors[i] = glm::vec4(glm::abs(bodies[i].force)* 10.5f/boost, 1.0f) + glm::vec4(0.3f, 0.3f, 0.3f, 0.0f);
+		colors[i] = glm::vec4(glm::abs(bodies[i].force)* 10.5f/100.0f, 1.0f) + glm::vec4(0.4f, 0.4f, 0.4f, 1.0f);
 		//colors[i] = glm::vec4((bodies[i].force)* 10.5f/boost, 1.0f) + glm::vec4(0.3f, 0.3f, 0.3f, 0.0f);
 
 	}
@@ -175,6 +197,7 @@ __global__ void test(Body* bodies, glm::vec4* colors, int numBodies)
 	}
 }
 
+//float inc = 0;
 
 
 void runPhysics(Body* bodies, glm::mat4* models, glm::vec4* colors, int numBodies, float timestep, float boost)

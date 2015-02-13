@@ -19,7 +19,7 @@ int main()
 {
 	Display display(1280, 720, false);
 	
-	Camera* camera = new Camera(70.0f,  1280, 720, 10.0f, 10000.0f);
+	Camera* camera = new Camera(70.0f,  1280, 720, 1.0f, 10000.0f);
 
 	Input input(camera);
 	input.setWindow(display);
@@ -48,7 +48,7 @@ int main()
 		glData data = scene.getCUDAResourcePointers();
 
 		if(!input.paused())
-		runPhysics(scene.getCUDABodies(), data.modelRT, data.color, info.numBodies[0], timestep*1000, 1);
+		runPhysics(scene.getCUDABodies(), data.modelRT, data.color, info.numBodies[0], timestep*500, 1);
 		else
 		runPhysics(scene.getCUDABodies(), data.modelRT, data.color, info.numBodies[0], timestep*50, 1);
 

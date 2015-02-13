@@ -99,6 +99,8 @@ void Display::initGL(int width, int height, bool fullscreen)
 	//glEnable (GL_BLEND);
 	//glBlendFunc (GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
+	glfwSetWindowPos(window, 1920, 0);
+
 }
 
 GLuint Display::loadTexure(const char* texturePath)

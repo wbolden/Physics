@@ -13,5 +13,5 @@ void main()
 {
 	vec4 texel = texture(tex, texCoords);
 
-	fragColor = texel * color;
+	fragColor = texel * color;//clamp(color, vec4(0, 0, 0, 0), vec4(1, 1, 1, 1));
 }
