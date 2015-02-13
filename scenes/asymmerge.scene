@@ -1,0 +1,101 @@
+#texture tex //path to texture
+textures/t2.png
+#end
+
+#model msphere
+models/cube.model
+#end
+
+
+#body b1
+msphere 	//model
+tex 		//texture
+80000 			//mass (kg)
+1 			//scale
+0	0	0 	//center of mass
+
+//inertia tensor (only constants, cmr^2 calculated later)
+0.4	0	0
+0	0.4	0
+0	0	0.4
+
+1000 //number to make
+
+-250	-150 //min x	max x
+-250	-150 //min y	max y
+-250	-150 //min z	max z
+
+//Rotation [min, max]
+0 0
+0 0
+0 0
+
+//Velocities [min, max]
+0.0018 0.0018 //for moon
+//-0.05 -0.05
+//-0.05 -0.05
+//-0.05 -0.05
+0 0
+0 0
+0 0
+
+//Angular Velocities [min, max]
+0 0
+0 0
+0 0
+#end
+
+#body b2
+msphere 	//model
+tex 		//texture
+40000 			//mass (kg)
+1 			//scale
+0	0	0 	//center of mass
+
+//inertia tensor (only constants, cmr^2 calculated later)
+0.4	0	0
+0	0.4	0
+0	0	0.4
+
+3000 //number to make
+
+//150	250 //min x	max x
+//150	250 //min y	max y
+//150	250 //min z	max z
+
+-50	50 //min x	max x
+-50	50 //min y	max y
+-50	50 //min z max z
+
+//Rotation [min, max]
+0 0
+0 0
+0 0
+
+//Velocities [min, max]
+0 0
+0 0
+0 0
+
+//Angular Velocities [min, max]
+0 0
+0 0
+0 0
+#end
+
+
+			// glm::vec3 avel(mx, my, 0.0f);
+			
+
+			// float angle = glm::length(avel);
+
+			// if(angle > 0)
+			// {
+			// 	float sinal = sinf(angle/2.0f)/angle;
+			// 	glm::quat inter(cosf(angle/2.0f) ,glm::vec3(avel.x*sinal, avel.y*sinal, avel.z*sinal));
+			// 	rotq = inter * rotq;
+			// }
+
+
+			// glm::mat4 mtest = glm::mat4_cast(rotq);
+			// mtest = glm::translate(mtest, pos);
